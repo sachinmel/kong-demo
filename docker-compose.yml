@@ -1,0 +1,88 @@
+services:
+  pcs-sp-db-instance:
+    image: postgres:13.1
+    container_name: pcs-sp-db-instance
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=pg123
+      - POSTGRES_DB=pcs-backend-rd-v1
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    ports:
+      - 5432:5432
+    networks:
+      - kong-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+
+  pcs-pgadmin4panel:
+    image: dpage/pgadmin4:8.4
+    container_name: pcs-sp-db-pgadmin4panel
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=adminuser@gmail.com
+      - PGADMIN_DEFAULT_PASSWORD=1234
+    ports:
+      - 3800:80
+    depends_on:
+      pcs-sp-db-instance:
+        condition: service_healthy
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    networks:
+      - kong-network
+
+  kong:
+    image: kong/kong-gateway:latest
+    container_name: kong-gateway
+    depends_on:
+      pcs-sp-db-instance:
+        condition: service_healthy
+      express-crud-app: 
+        condition: service_started
+    volumes:
+      - ./kong.yml:/home/kong/kong.yml:ro
+    command: >
+      sh -c "
+      if [ ! -f /tmp/kong_initialized ]; then
+        echo 'pg_database = pcs-backend-rd-v1' >> /etc/kong/kong.conf &&
+        kong migrations bootstrap &&
+        kong config db_import /home/kong/kong.yml &&
+        touch /tmp/kong_initialized;
+      fi &&
+      kong start"
+    environment:
+      KONG_DATABASE: "postgres"
+      KONG_PG_HOST: pcs-sp-db-instance
+      KONG_PG_DB: pcs-backend-rd-v1
+      KONG_PG_USER: postgres
+      KONG_PG_PASSWORD: pg123
+      KONG_DECLARATIVE_CONFIG: "/home/kong/kong.yml"
+      KONG_PROXY_LISTEN: "0.0.0.0:8000"
+      KONG_ADMIN_LISTEN: "0.0.0.0:8001"
+    ports:
+      - "8000:8000"
+      - "8001:8001"
+    networks:
+      - kong-network
+
+  express-crud-app:
+    build:
+      context: ./express-crud-app
+    container_name: express-crud-app
+    ports:
+      - "3000:3000"
+    networks:
+      - kong-network
+
+networks:
+  kong-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  pgadmin-data:
+    driver: local

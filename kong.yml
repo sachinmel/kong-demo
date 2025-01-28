@@ -1,0 +1,37 @@
+_format_version: "3.0" # Defines the format version of the Kong configuration file
+
+services:
+  # Define a service named "items-service" that connects to the upstream Express app
+  - name: items-service
+    url: http://express-crud-app:3000/items # The URL of the upstream service (use container name for Docker network communication)
+    routes:
+      # Define a route named "items-route" that listens on the /items path
+      - name: items-route
+        paths:
+          - /items # This is the public path exposed by Kong for the service
+
+plugins:
+  # Enable rate limiting plugin to restrict the number of requests per minute
+  - name: rate-limiting
+    config:
+      minute: 10 # Allow up to 10 requests per minute
+      policy: local # Use local in-memory policy for rate limiting
+
+  # Enable Proxy Caching plugin
+  - name: proxy-cache
+    config:
+      response_code:
+        - 200
+      request_method:
+        - GET
+        - HEAD
+      content_type:
+        - text/plain
+        - application/json
+      cache_ttl: 300 # seconds
+      strategy: memory
+
+
+consumers:
+  # Define a consumer named "items-consumer" who will use this service
+  - username: items-consumer
