@@ -16,6 +16,9 @@ Use the provided Postman collection file to set up and interact with the OAuth2 
 
 ## Postman Endpoints
 
+### Using Declarative Approach
+- Add `kong config db_import /home/kong/kong.yml &&` after the line `kong migrations bootstrap` in the Docker Compose file.
+
 ### 1. Add OAuth2 Plugin to Service
 **Description:** Adds the OAuth2 plugin to the `items-service` to secure it with OAuth2 authentication.
 
@@ -30,8 +33,38 @@ Use the provided Postman collection file to set up and interact with the OAuth2 
 
 ---
 
+## Web GUI Approach
+
+### Step 1: Add Gateway Service
+1. Navigate to 'Gateway Service'.
+2. Add a new gateway service.
+3. Enter the service name (`items-service`) and the API host URL (`http://localhost:3000`).
+
+### Step 2: Add Route
+1. Navigate to 'Routes'.
+2. Add a new route.
+3. Enter the route name (`items-route`).
+4. Select the service you want to associate with the route (`items-service`).
+5. Add the path of the API route to be directed by the Kong route (`/items`).
+
+### Step 3: Enable Rate Limiting Plugin
+1. Navigate to 'Plugins'.
+2. Add a new plugin.
+3. Enable **Rate Limiting**.
+4. Enter the rate limiting conditions in the form (e.g., 10 requests per minute).
+
+### Step 4: Enable Proxy Cache Plugin
+1. Navigate to 'Plugins'.
+2. Add a new plugin.
+3. Enable **Proxy Cache**.
+4. Select the strategy as **memory**.
+
+---
+
 ## ExpressJS CRUD Endpoints
-- use access_token generated in 3rd step of postman
+Use the `access_token` generated in step 3 of the Postman flow to authenticate requests to the ExpressJS CRUD endpoints.
+
+---
 
 ## Keywords Used in Kong
 
@@ -49,4 +82,9 @@ Use the provided Postman collection file to set up and interact with the OAuth2 
 
 ---
 
-This guide provides the necessary steps to set up and use OAuth2 with Kong for the `items-service`. Feel free to modify the configuration to suit your use case.
+## Kong Configuration URLs
+- **Kong API URL:** [http://localhost:8001](http://localhost:8001)
+- **Kong GUI Host:** [http://localhost:8002](http://localhost:8002)
+- **Kong Proxy for API:** [http://localhost:8000](http://localhost:8000)
+- **Express API Host:** [http://localhost:3000](http://localhost:3000)
+
