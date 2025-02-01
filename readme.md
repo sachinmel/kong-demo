@@ -80,6 +80,12 @@ Use the `access_token` generated in step 3 of the Postman flow to authenticate r
 - Represents the users or clients that access the services.
 - Each consumer can be assigned credentials (e.g., API keys, OAuth2 credentials) for authentication.
 
+### 4. Add Key Authentication to the consumer
+- Goto Consumer > Credenetials
+- Enable Key Authentication
+- Add New Auth Key Credential
+- Pass the key provided to the header of request (e.g., key: apikey, value: key_provided)
+
 ---
 
 ## Kong Configuration URLs
